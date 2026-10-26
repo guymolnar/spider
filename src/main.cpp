@@ -1,14 +1,21 @@
+#include "PcapCapture.hpp"
 #include "NfqCapture.hpp"
-
 #include <iostream>
 #include <stdexcept>
+#include <thread>
 
 int main()
 {
     try
     {
         NfqCapture nfq(0);
-        nfq.run();
+        PcapCapture pcap("eth0");
+
+        std::thread nfqThread(&NfqCapture::run, &nfq);
+        std::thread pcapThread(&PcapCapture::run, &pcap);
+
+        nfqThread.join();
+        pcapThread.join();
     }
     catch (const std::exception& e)
     {
