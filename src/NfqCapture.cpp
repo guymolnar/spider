@@ -9,7 +9,7 @@
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
 #include <stdexcept>
-#include "nfq_capture.h"
+#include "NfqCapture.hpp"
 
 
 static int onPacket(nfq_q_handle* qh, nfgenmsg*, nfq_data* nfa, void*)
@@ -56,12 +56,12 @@ NfqCapture::~NfqCapture()
 {
     if (_queueHandle)
     {
-        nfq_destroy_queue(qh_);
+        nfq_destroy_queue(_queueHandle);
     
     }    
     if (_handle)
     {
-        nfq_close(h_);
+        nfq_close(_handle);
     }
 }
 
