@@ -6,7 +6,7 @@ struct nfq_q_handle;
 class NfqCapture
 {
 public:
-    explicit NfqCapture(int queueNum);
+    NfqCapture(int queueNum);
     ~NfqCapture();
 
     NfqCapture(const NfqCapture&) = delete;
