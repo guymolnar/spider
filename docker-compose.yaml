@@ -1,0 +1,46 @@
+services:
+  router:
+    build: ./docker/router
+    container_name: router
+    cap_add: [NET_ADMIN, NET_RAW]
+    sysctls:
+      - net.ipv4.ip_forward=1
+    command: sh -c "sleep infinity"
+    networks:
+      lannet: { ipv4_address: 10.0.1.254 }
+      wannet: { ipv4_address: 10.0.2.254 }
+
+  client1:
+    build: ./docker/host
+    container_name: client1
+    cap_add: [NET_ADMIN, NET_RAW]
+    command: sh -c "ip route replace default via 10.0.1.254 && sleep infinity"
+    networks:
+      lannet: { ipv4_address: 10.0.1.10 }
+    depends_on: [router]
+
+  client2:
+    build: ./docker/host
+    container_name: client2
+    cap_add: [NET_ADMIN, NET_RAW]
+    command: sh -c "ip route replace default via 10.0.1.254 && sleep infinity"
+    networks:
+      lannet: { ipv4_address: 10.0.1.11 }
+    depends_on: [router]
+
+  outside:
+    build: ./docker/host
+    container_name: outside
+    cap_add: [NET_ADMIN, NET_RAW]
+    command: sh -c "ip route replace default via 10.0.2.254 && sleep infinity"
+    networks:
+      wannet: { ipv4_address: 10.0.2.10 }
+    depends_on: [router]
+
+networks:
+  lannet:
+    ipam:
+      config: [{ subnet: 10.0.1.0/24 }]
+  wannet:
+    ipam:
+      config: [{ subnet: 10.0.2.0/24 }]
