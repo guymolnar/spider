@@ -8,6 +8,7 @@ RUN apt-get update \
         iptables \
         build-essential \
         cmake \
+        pkg-config \
         libnetfilter-queue-dev \
         libpcap-dev \
     && rm -rf /var/lib/apt/lists/*
