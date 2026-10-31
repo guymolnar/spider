@@ -4,7 +4,7 @@
 class Parser
 {
 public:
-    static bool parse(const uint8_t* data, size_t len);
+    static bool parse(const uint8_t* data, size_t len, Source source, Packet& out);
 private:
     static bool parseEthernet(Packet& p, const uint8_t* data, size_t len);
     static bool parseArp(Packet& p, const uint8_t* data, size_t len);

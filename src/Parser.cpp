@@ -1,13 +1,31 @@
 #include "Parser.hpp"
 
+
+
+bool Parser::parse(const uint8_t* data, size_t len, Source source, Packet& out)
+{
+    out = Packet();
+    out.source = source;
+
+    if(source == Source::Mirror)
+    {
+        return parseEthernet(out, data, len);
+    }
+    else
+    {
+        return parseIpv4(out, data, len);
+    }
+}
+
+
 bool Parser::parseEthernet(Packet& p, const uint8_t* data, size_t len)
 {
     if(len < sizeof(ether_header))
     {
         return false;
     }
-    p._eth = reinterpret_cast<const ether_header*>(data);    
-    uint16_t type = ntohs(p._eth->ether_type);
+    p.eth = reinterpret_cast<const ether_header*>(data);    
+    uint16_t type = ntohs(p.eth->ether_type);
     data += sizeof(ether_header);
     len  -= sizeof(ether_header);
 
@@ -18,7 +36,7 @@ bool Parser::parseEthernet(Packet& p, const uint8_t* data, size_t len)
     case ETHERTYPE_IP:
         return parseIpv4(p, data, len);
     default:
-        break;
+        return true;
     }
 }
 
@@ -34,7 +52,7 @@ bool Parser::parseArp(Packet& p, const uint8_t* data, size_t len)
         return false;
     }
 
-    p._arp = arp;
+    p.arp = arp;
     return true;
 }
 
@@ -67,7 +85,7 @@ bool Parser::parseIpv4(Packet& p, const uint8_t* data, size_t len)
     }
 
     len = totalLen;
-    p._ip4 = iph;
+    p.ip4 = iph;
     if (ntohs(iph->ip_off) & IP_OFFMASK)
     {
         return true;
@@ -99,11 +117,11 @@ bool Parser::parseTcp(Packet& p, const uint8_t* data, size_t len)
     {
         return false;
     }
-    p._tcp = tcph;
+    p.tcp = tcph;
     data += hdrLen;
     len -= hdrLen;
-    p._payload = data;
-    p._payloadLen = len;
+    p.payload = data;
+    p.payloadLen = len;
     return true;
 }
 
@@ -119,10 +137,26 @@ bool Parser::parseUdp(Packet& p, const uint8_t* data, size_t len)
     {
         return false;
     }
-    p._udp = udph;
+    p.udp = udph;
+    len = udpLen;
     data += sizeof(udphdr);
     len -= sizeof(udphdr);
-    p._payload = data;
-    p._payloadLen = len;
+    p.payload = data;
+    p.payloadLen = len;
+    return true;
+}
+
+bool Parser::parseIcmp(Packet& p, const uint8_t* data, size_t len)
+{
+    if(len < sizeof(icmphdr))
+    {
+        return false;
+    }
+    const icmphdr* icmp_hdr = reinterpret_cast<const icmphdr*>(data);
+    p.icmp = icmp_hdr;
+    data += sizeof(icmphdr);
+    len -= sizeof(icmphdr);
+    p.payload = data;
+    p.payloadLen = len;
     return true;
 }

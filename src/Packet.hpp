@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <cstddef>
 #include <net/ethernet.h>
 #include <netinet/if_ether.h>
 #include <netinet/ip.h>
@@ -7,14 +8,21 @@
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 
-struct Packet{
-    const ether_header* _eth = nullptr;
-    const ether_arp* _arp = nullptr;
-    const ip* _ip4 = nullptr;
-    const tcphdr* _tcp = nullptr;
-    const udphdr* _udp = nullptr;
-    const icmphdr* _icmp = nullptr;
+enum class Source 
+{ 
+    Inline, 
+    Mirror 
+};
 
-    const uint8_t* _payload = nullptr;
-    size_t _payloadLen = 0;
+struct Packet{
+    Source source;
+    const ether_header* eth = nullptr;
+    const ether_arp* arp = nullptr;
+    const ip* ip4 = nullptr;
+    const tcphdr* tcp = nullptr;
+    const udphdr* udp = nullptr;
+    const icmphdr* icmp = nullptr;
+
+    const uint8_t* payload = nullptr;
+    size_t payloadLen = 0;
 };
