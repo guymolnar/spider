@@ -86,3 +86,23 @@ bool Parser::parseIpv4(Packet& p, const uint8_t* data, size_t len)
             return true;
     }
 }
+
+bool Parser::parseTcp(Packet& p, const uint8_t* data, size_t len)
+{
+    if(len < sizeof(tcphdr))
+    {
+        return false;
+    }
+    const tcphdr* tcph = reinterpret_cast<const tcphdr*>(data);
+    size_t hdrLen = tcph->doff * 4;
+    if(hdrLen < sizeof(tcphdr) || hdrLen > len)
+    {
+        return false;
+    }
+    p._tcp = tcph;
+    data += hdrLen;
+    len -= hdrLen;
+    p._payload = data;
+    p._payloadLen = len;
+    return true;
+}
