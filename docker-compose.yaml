@@ -8,7 +8,7 @@ services:
     volumes:
       - .:/spider
     working_dir: /spider
-    command: sh -c "iptables -C FORWARD -j NFQUEUE --queue-num 0 --queue-bypass 2>/dev/null || iptables -I FORWARD -j NFQUEUE --queue-num 0 --queue-bypass; sleep infinity"
+    command: sh /spider/docker/router/start.sh
     networks:
       lannet: { ipv4_address: 10.0.1.254 }
       wannet: { ipv4_address: 10.0.2.254 }
