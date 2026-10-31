@@ -6,8 +6,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
     volumes:
-      - ./src:/spider/src
-    working_dir: /spider/src
+      - .:/spider
+    working_dir: /spider
     command: sh -c "iptables -C FORWARD -j NFQUEUE --queue-num 0 --queue-bypass 2>/dev/null || iptables -I FORWARD -j NFQUEUE --queue-num 0 --queue-bypass; sleep infinity"
     networks:
       lannet: { ipv4_address: 10.0.1.254 }
