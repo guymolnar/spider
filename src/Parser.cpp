@@ -106,3 +106,23 @@ bool Parser::parseTcp(Packet& p, const uint8_t* data, size_t len)
     p._payloadLen = len;
     return true;
 }
+
+bool Parser::parseUdp(Packet& p, const uint8_t* data, size_t len)
+{
+    if(len < sizeof(udphdr))
+    {
+        return false;
+    }
+    const udphdr* udph = reinterpret_cast<const udphdr*>(data);
+    size_t udpLen = ntohs(udph->len);
+    if (udpLen < sizeof(udphdr) || udpLen > len) //the headers length is consatnt
+    {
+        return false;
+    }
+    p._udp = udph;
+    data += sizeof(udphdr);
+    len -= sizeof(udphdr);
+    p._payload = data;
+    p._payloadLen = len;
+    return true;
+}
