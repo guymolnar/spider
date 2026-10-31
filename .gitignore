@@ -1,3 +1,77 @@
+# ─── C++ / build artifacts ───────────────────────────────
+# Compiled objects & libraries
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.lo
+*.la
+*.dll
+*.dylib
+
+# Executables (no extension on Linux — adjust names if yours differ)
+*.out
+*.exe
+*.app
+
+# CMake
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Debug / profiling
+*.dSYM/
+*.su
+*.idb
+*.pdb
+core
+vgcore.*
+
+# ─── Python / attack scripts ─────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# ─── Docker ──────────────────────────────────────────────
+# Keep Dockerfiles & compose files tracked; ignore local overrides & runtime
+docker-compose.override.yml
+*.env
+.env
+.env.*
+
+# ─── Editor / IDE ────────────────────────────────────────
+# Ignore the folder but promote shareable project configs when you add them
 .vscode/*
-!.vscode/launch.json
-!.vscode/settings.json
+.vscode/launch.json
+.vscode/settings.json
+.vscode/extensions.json
+.idea/
+
+# ─── OS cruft ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+
+# ─── Logs / captures ─────────────────────────────────────
+# pcap files from testing can be large — ignore by default
+*.pcap
+*.pcapng
+*.log
