@@ -3,10 +3,12 @@
 #include <pcap/pcap.h>
 #include <string>
 
+class IcmpFloodDetector;
+
 class PcapCapture
 {
 public:
-    explicit PcapCapture(const std::string& iface);
+    PcapCapture(const std::string& iface, IcmpFloodDetector* detector = nullptr);
     ~PcapCapture();
 
     PcapCapture(const PcapCapture&) = delete;
@@ -16,4 +18,5 @@ public:
 
 private:
     pcap_t* _handle = nullptr;
+    IcmpFloodDetector* _detector = nullptr;     // not owned, main keeps it alive
 };
