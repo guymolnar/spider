@@ -48,3 +48,27 @@ void PacketCounter::record(uint32_t srcIp, std::chrono::steady_clock::time_point
 
     e.buckets[slice % buckets]++;
 }
+
+uint32_t PacketCounter::rate(uint32_t srcIp, std::chrono::steady_clock::time_point now) const
+{
+    const int64_t buckets = kBuckets;
+    int64_t nowSlice = sliceOf(now); //current slice
+
+    auto it = _entries.find(srcIp);
+    if (it == _entries.end())
+    {
+        return 0;
+    }
+
+    const Entry& e = it->second;
+    uint32_t total = 0;
+    for (int64_t age = 0; age < buckets; age++)
+    {
+        int64_t s = e.lastSlice - age;      // the slice this bucket holds
+        if (s > nowSlice - buckets && s >= 0)   // still inside the window ending now
+        {
+            total += e.buckets[s % buckets];
+        }
+    }
+    return total;
+}
