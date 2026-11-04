@@ -10,14 +10,13 @@
 
 #include <stdexcept>
 #include "NfqCapture.hpp"
-#include "IcmpFloodDetector.hpp"
+#include "Engine.hpp"
 #include "Parser.hpp"
 
 
 static int onPacket(nfq_q_handle* qh, nfgenmsg*, nfq_data* nfa, void* user)
 {
-    auto* detector = static_cast<IcmpFloodDetector*>(user);
-
+    auto* engine = static_cast<Engine*>(user);
     nfqnl_msg_packet_hdr* ph = nfq_get_msg_packet_hdr(nfa);
     if (!ph)
     {
@@ -28,33 +27,24 @@ static int onPacket(nfq_q_handle* qh, nfgenmsg*, nfq_data* nfa, void* user)
     unsigned char* data;
     int len = nfq_get_payload(nfa, &data);
 
-    std::printf("[nfq] id=%u len=%d proto=0x%04x\n", id, len, ntohs(ph->hw_protocol));
-
-    uint32_t verdict = NF_ACCEPT;    
-
-    Packet pkt;
-    if (detector && len > 0 && Parser::parse(data, static_cast<size_t>(len), Source::Inline, pkt))
+    uint32_t verdict = NF_ACCEPT;
+    if (len > 0 && engine->process(data, static_cast<size_t>(len), Source::Inline) == Verdict::DROP)
     {
-
-        if (detector->wants(pkt) && detector->inspect(pkt) == Verdict::DROP)
-        {
-            verdict = NF_DROP;
-        }
+        verdict = NF_DROP;
     }
 
     return nfq_set_verdict(qh, id, verdict, 0, nullptr);
 }
 
 
-NfqCapture::NfqCapture(int queueNum, IcmpFloodDetector* detector)
-    : _detector(detector)
+NfqCapture::NfqCapture(int queueNum, Engine* engine)
 {
     _handle = nfq_open();
     if (!_handle)
     {
         throw std::runtime_error("nfq_open failed (are you root?)");
     }
-    _queueHandle = nfq_create_queue(_handle, queueNum, &onPacket, _detector);
+    _queueHandle = nfq_create_queue(_handle, queueNum, &onPacket, engine);
     if (!_queueHandle)
     {
         nfq_close(_handle);

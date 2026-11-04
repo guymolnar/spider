@@ -18,4 +18,5 @@ public:
 
 private:
     pcap_t* _handle = nullptr;
+    Engine* _engine = nullptr;
 };
