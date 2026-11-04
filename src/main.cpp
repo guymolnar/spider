@@ -11,8 +11,8 @@ int main()
     {
         Engine engine;
 
-        NfqCapture nfq(0, &engine);
-        PcapCapture pcap("eth0", &engine);
+        NfqCapture nfq(0, engine);
+        PcapCapture pcap("eth0", engine);
 
         std::thread nfqThread(&NfqCapture::run, &nfq);
         std::thread pcapThread(&PcapCapture::run, &pcap);

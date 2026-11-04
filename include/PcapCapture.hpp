@@ -8,7 +8,7 @@ class Engine;
 class PcapCapture
 {
 public:
-    PcapCapture(const std::string& iface, Engine* engine);
+    PcapCapture(const std::string& iface, Engine& engine);
     ~PcapCapture();
 
     PcapCapture(const PcapCapture&) = delete;
@@ -18,5 +18,5 @@ public:
 
 private:
     pcap_t* _handle = nullptr;
-    Engine* _engine = nullptr;
+    Engine& _engine;
 };

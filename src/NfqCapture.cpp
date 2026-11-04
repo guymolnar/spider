@@ -11,7 +11,6 @@
 #include <stdexcept>
 #include "NfqCapture.hpp"
 #include "Engine.hpp"
-#include "Parser.hpp"
 
 
 static int onPacket(nfq_q_handle* qh, nfgenmsg*, nfq_data* nfa, void* user)
@@ -37,14 +36,14 @@ static int onPacket(nfq_q_handle* qh, nfgenmsg*, nfq_data* nfa, void* user)
 }
 
 
-NfqCapture::NfqCapture(int queueNum, Engine* engine)
+NfqCapture::NfqCapture(int queueNum, Engine& engine)
 {
     _handle = nfq_open();
     if (!_handle)
     {
         throw std::runtime_error("nfq_open failed (are you root?)");
     }
-    _queueHandle = nfq_create_queue(_handle, queueNum, &onPacket, engine);
+    _queueHandle = nfq_create_queue(_handle, queueNum, &onPacket, &engine);
     if (!_queueHandle)
     {
         nfq_close(_handle);

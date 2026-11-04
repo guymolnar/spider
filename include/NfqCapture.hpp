@@ -7,7 +7,7 @@ class Engine;
 class NfqCapture
 {
 public:
-    NfqCapture(int queueNum, Engine* engine);
+    NfqCapture(int queueNum, Engine& engine);
     ~NfqCapture();
 
     NfqCapture(const NfqCapture&) = delete;
