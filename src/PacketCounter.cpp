@@ -72,3 +72,21 @@ uint32_t PacketCounter::rate(uint32_t srcIp, std::chrono::steady_clock::time_poi
     }
     return total;
 }
+
+void PacketCounter::clearIdle(std::chrono::steady_clock::time_point now)
+{
+    const int64_t buckets = kBuckets;
+    int64_t nowSlice = sliceOf(now);
+
+    for (auto it = _entries.begin(); it != _entries.end();)
+    {
+        if (nowSlice - buckets >= it->second.lastSlice)
+        {
+            it = _entries.erase(it);        // erase returns the next iterator
+        }
+        else
+        {
+            it++;
+        }
+    }
+}
