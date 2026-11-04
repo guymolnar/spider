@@ -2,12 +2,12 @@
 
 struct nfq_handle;
 struct nfq_q_handle;
-class IcmpFloodDetector;
+class Engine;
 
 class NfqCapture
 {
 public:
-    NfqCapture(int queueNum, IcmpFloodDetector* detector = nullptr);
+    NfqCapture(int queueNum, Engine& engine);
     ~NfqCapture();
 
     NfqCapture(const NfqCapture&) = delete;
@@ -18,5 +18,4 @@ public:
 private:
     nfq_handle* _handle = nullptr;
     nfq_q_handle* _queueHandle = nullptr;
-    IcmpFloodDetector* _detector = nullptr;     // not owned, main keeps it alive
 };
