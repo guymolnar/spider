@@ -10,9 +10,9 @@
 class PacketCounter
 {
 public:
-    static constexpr std::size_t kBuckets = 5;
+    static constexpr int kBuckets = 5;
 
-    PacketCounter(std::chrono::steady_clock::duration window);
+    explicit PacketCounter(std::chrono::steady_clock::duration window);
 
     PacketCounter(const PacketCounter&) = delete;
     PacketCounter& operator=(const PacketCounter&) = delete;
@@ -35,5 +35,5 @@ private:
 
     std::chrono::steady_clock::duration _bucketWidth;          
     std::unordered_map<uint32_t, Entry> _entries;
-   
+    mutable std::mutex _mutex;
 };

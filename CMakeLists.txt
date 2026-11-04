@@ -15,6 +15,7 @@ add_executable(spider
     src/NfqCapture.cpp
     src/PcapCapture.cpp
     src/Parser.cpp
+    src/PacketCounter.cpp
 )
 
 target_include_directories(spider PRIVATE include)
