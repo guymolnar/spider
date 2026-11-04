@@ -1,8 +1,9 @@
 #pragma once
 #include "Detector.hpp"
 #include "PacketCounter.hpp"
+#include "StateManager.hpp"
 #include <chrono>
-
+#include <iostream>
 class IcmpFloodDetector : public Detector
 {
 public:
