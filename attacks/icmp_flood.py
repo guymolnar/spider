@@ -1,4 +1,4 @@
 from scapy.all import IP, ICMP, send
-ip = "172.25.96.1" #my pc's ip
+ip = "10.0.2.10"
 
 send(IP(dst=ip)/ICMP(), loop=1, inter=0)
