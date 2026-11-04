@@ -6,4 +6,5 @@ RUN apt-get update \
         iproute2 \
         iputils-ping \
         tcpdump \
+        python3-scapy \
     && rm -rf /var/lib/apt/lists/*

@@ -17,6 +17,8 @@ services:
     build: ./docker/host
     container_name: client1
     cap_add: [NET_ADMIN, NET_RAW]
+    volumes:
+      - ./attacks:/attacks:ro
     command: sh -c "ip route replace default via 10.0.1.254 && sleep infinity"
     networks:
       lannet: { ipv4_address: 10.0.1.10 }
