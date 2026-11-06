@@ -56,6 +56,19 @@ NfqCapture::NfqCapture(int queueNum, Engine& engine)
         nfq_close(_handle);
         throw std::runtime_error("nfq_set_mode failed");
     }
+    if(nfq_set_queue_maxlen(_queueHandle, 4096) < 0)
+    {
+        nfq_destroy_queue(_queueHandle);
+        nfq_close(_handle);
+        throw std::runtime_error("nfq_set_queue_maxlen failed");
+    }
+    if(nfq_set_queue_flags(_queueHandle, NFQA_CFG_F_FAIL_OPEN, 1) < 0)
+    {
+        nfq_destroy_queue(_queueHandle);
+        nfq_close(_handle);
+        throw std::runtime_error("nfq_set_queue_flags failed");
+    }
+    nfnl_rcvbufsiz(nfq_nfnlh(_handle), 4096 * 1024); // set the socket receive buffer size to 4MB
 }
 
 NfqCapture::~NfqCapture()
@@ -86,7 +99,7 @@ void NfqCapture::run()
         }
         if (errno == ENOBUFS) //checking for overflow
         {
-            std::fprintf(stderr, "[nfq] queue overflow, packets lost\n");
+            std::fprintf(stderr, "[nfq] queue overflow\n");
             continue;
         }
         else
