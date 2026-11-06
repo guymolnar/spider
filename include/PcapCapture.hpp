@@ -2,7 +2,6 @@
 
 #include <pcap/pcap.h>
 #include <string>
-#include <fstream>
 
 class Engine;
 
@@ -20,5 +19,5 @@ public:
 private:
     pcap_t* _handle = nullptr;
     Engine& _engine;
-    std::string readMac(std::string iface);
+    static std::string readMac(const std::string& iface);
 };
