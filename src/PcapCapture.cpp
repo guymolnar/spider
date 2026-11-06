@@ -50,3 +50,17 @@ void PcapCapture::run()
         std::cerr << "pcap_loop: " << pcap_geterr(_handle) << '\n';
     }
 }
+
+std::string PcapCapture::readMac(std::string iface)
+{
+    std::string path = "/sys/class/net/" + iface + "/address";
+    std::ifstream file(path);
+    if (!file.is_open())
+    {
+        throw std::runtime_error("failed to open " + path);
+    }
+    std::string mac;
+    std::getline(file, mac);
+    file.close();
+    return mac;
+}
