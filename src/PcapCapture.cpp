@@ -18,10 +18,20 @@ PcapCapture::PcapCapture(const std::string& iface, Engine& engine)
     : _engine(engine)
 {
     char errbuf[PCAP_ERRBUF_SIZE];
-    _handle = pcap_open_live(iface.c_str(), 65535, 1, 1000, errbuf); //third parameter is promiscious mode
+    _handle = pcap_create(iface.c_str(), errbuf); // check if the interface exists
     if (!_handle)
     {
-        throw std::runtime_error(errbuf);
+        pcap_close(_handle);
+        throw std::runtime_error("error creating pcap handle: " + std::string(errbuf));
+    }
+    
+    pcap_set_snaplen(_handle, 65535);
+    pcap_set_promisc(_handle, 1);
+    pcap_set_immediate_mode(_handle, 1);
+    if (pcap_activate(_handle) != 0)
+    {
+        pcap_close(_handle);
+        throw std::runtime_error("error activating pcap handle.");
     }
 }
 
