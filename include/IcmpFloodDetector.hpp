@@ -5,15 +5,18 @@
 #include "Detector.hpp"
 #include "PacketCounter.hpp"
 
+class Logger;
+
 class IcmpFloodDetector : public Detector
 {
 public:
-    IcmpFloodDetector(PacketCounter& counter, uint32_t threshold);
+    IcmpFloodDetector(PacketCounter& counter, uint32_t threshold, Logger& logger);
 
     Verdict inspect(const Packet& packet) override;
     bool wants(const Packet& packet) const override;
 
 private:
     PacketCounter& _counter; 
-    uint32_t _threshold;     
+    uint32_t _threshold;
+    Logger& _logger;
 };

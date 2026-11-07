@@ -19,6 +19,7 @@ add_executable(spider
     src/StateManager.cpp
     src/IcmpFloodDetector.cpp
     src/Engine.cpp
+    src/Logger.cpp
 )
 
 target_include_directories(spider PRIVATE include)
