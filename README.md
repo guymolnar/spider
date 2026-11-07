@@ -32,7 +32,7 @@ Detectors:
 - Docker + Compose plugin, for the lab
 ## Quick start
  
-The repo ships a lab: a router running spider, two clients and an attacker on `lannet` (10.0.1.0/24), and a server on `wannet` (10.0.2.0/24).
+The repo ships a lab: a router running spider, two clients (`client1`, `client2`) on `lannet` (10.0.1.0/24), and a host called `outside` on `wannet` (10.0.2.0/24).
  
 ```bash
 git clone https://gitlab.com/guypro0906/netanya-904-spider.git
@@ -43,19 +43,20 @@ docker compose up --build -d
 Set up LAN mirroring before starting spider. LAN hosts talk to each other directly through the bridge, so without this spider only sees router-crossing traffic:
  
 ```bash
-sudo ./scripts/setup_mirroring.sh
+sudo ./mirror.sh
 ```
  
-Start spider:
+Start spider on the router's LAN interface, the one holding `10.0.1.254`. Docker doesn't guarantee whether that is `eth0` or `eth1`, so look it up first:
  
 ```bash
-docker compose exec router ./spider
+docker compose exec router ip -o -4 addr show
+docker compose exec router ./spider <lan-interface>
 ```
  
 From another terminal:
  
 ```bash
-docker compose exec client1 ping 10.0.2.X
+docker compose exec client1 ping 10.0.2.10
 ```
  
 ## Mirroring
@@ -66,13 +67,6 @@ client1 and client2 talk to each other directly through the Docker bridge, so th
  
 Veth names change whenever containers are recreated, so rerun it after every `docker compose up` that recreates them. To mirror more clients, add them to `CLIENTS` at the top of the script.
  
-**Other Linux bridges (VMs, netns labs):** same idea by hand, for each host-facing bridge port except the router's:
- 
-```bash
-sudo tc qdisc add dev <host_port> clsact
-sudo tc filter add dev <host_port> ingress matchall action mirred egress mirror dev <router_port>
-```
- 
 **Physical switches:** configure port mirroring (SPAN) with the router's LAN port as the destination. Steps depend on the vendor.
  
 ## Running on a host
@@ -80,10 +74,10 @@ sudo tc filter add dev <host_port> ingress matchall action mirred egress mirror 
 ```bash
 cmake -S . -B build && cmake --build build
 sudo iptables -I FORWARD -j NFQUEUE --queue-num 0 --queue-bypass
-sudo ./build/spider
+sudo ./build/spider <lan-interface>
 ```
  
-spider currently uses queue 0 and captures mirrored traffic on `eth0`. Both are hardcoded until the config file lands in sprint 3.
+`<lan-interface>` is where spider captures mirrored traffic. Its libpcap filter ignores frames to or from that interface's own MAC address, so traffic that crosses the router is counted once, by NFQUEUE. The queue number (0) is hardcoded until the config file lands in sprint 3.
  
 ## How it works
  
