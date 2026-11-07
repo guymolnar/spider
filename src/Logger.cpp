@@ -40,3 +40,23 @@ void Logger::log(const std::string& message) {
     }
     _cv.notify_one();
 }
+
+void Logger::writerLoop() {
+    while (true) {
+        std::deque<std::string> batch;
+        {
+            std::unique_lock<std::mutex> lock(_mutex);
+            _cv.wait(lock, [this] { return !_queue.empty() || !_running; });
+            if (_queue.empty() && !_running) 
+            {
+                return;
+            }
+            batch.swap(_queue);
+        }
+
+        for (const std::string& line : batch) {
+            _file << line << '\n';
+        }
+        _file.flush();
+    }
+}
