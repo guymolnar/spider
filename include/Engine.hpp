@@ -9,10 +9,12 @@
 #include "Packet.hpp"
 #include "StateManager.hpp"
 
+class Logger;
+
 class Engine
 {
 public:
-    Engine();
+    explicit Engine(Logger& logger);
     ~Engine();
 
     Engine(const Engine&) = delete;

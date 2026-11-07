@@ -3,11 +3,12 @@
 struct nfq_handle;
 struct nfq_q_handle;
 class Engine;
+class Logger;
 
 class NfqCapture
 {
 public:
-    NfqCapture(int queueNum, Engine& engine);
+    NfqCapture(int queueNum, Engine& engine, Logger& logger);
     ~NfqCapture();
 
     NfqCapture(const NfqCapture&) = delete;
@@ -18,4 +19,5 @@ public:
 private:
     nfq_handle* _handle = nullptr;
     nfq_q_handle* _queueHandle = nullptr;
+    Logger& _logger;
 };

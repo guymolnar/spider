@@ -1,6 +1,6 @@
 #include <cstdint>
 #include <cerrno>
-#include <cstdio>
+#include <cstring>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include "NfqCapture.hpp"
 #include "Engine.hpp"
+#include "Logger.hpp"
 
 
 static int onPacket(nfq_q_handle* qh, nfgenmsg*, nfq_data* nfa, void* user)
@@ -36,7 +37,8 @@ static int onPacket(nfq_q_handle* qh, nfgenmsg*, nfq_data* nfa, void* user)
 }
 
 
-NfqCapture::NfqCapture(int queueNum, Engine& engine)
+NfqCapture::NfqCapture(int queueNum, Engine& engine, Logger& logger)
+    : _logger(logger)
 {
     _handle = nfq_open();
     if (!_handle)
@@ -68,7 +70,14 @@ NfqCapture::NfqCapture(int queueNum, Engine& engine)
         nfq_close(_handle);
         throw std::runtime_error("nfq_set_queue_flags failed");
     }
-    nfnl_rcvbufsiz(nfq_nfnlh(_handle), 4096 * 1024); // set the socket receive buffer size to 4MB
+    const unsigned int wantedBuf = 4096 * 1024; // 4MB socket receive buffer
+    unsigned int gotBuf = nfnl_rcvbufsiz(nfq_nfnlh(_handle), wantedBuf);
+    _logger.log("nfq: queue=" + std::to_string(queueNum) + " maxlen=4096 rcvbuf=" + std::to_string(gotBuf) +
+                " bytes (requested " + std::to_string(wantedBuf) + ")");
+    if (gotBuf < wantedBuf)
+    {
+        _logger.log("nfq: WARNING socket buffer smaller than requested");
+    }
 }
 
 NfqCapture::~NfqCapture()
@@ -99,12 +108,12 @@ void NfqCapture::run()
         }
         if (errno == ENOBUFS) //checking for overflow
         {
-            std::fprintf(stderr, "[nfq] queue overflow\n");
+            _logger.log("nfq: WARNING netlink receive buffer overflow, some packets were not delivered to spider");
             continue;
         }
         else
         {
-            std::perror("recv");
+            _logger.log(std::string("nfq: recv failed, capture stopped: ") + std::strerror(errno));
             break;
         }
     }

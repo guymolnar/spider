@@ -1,9 +1,13 @@
 #include "IcmpFloodDetector.hpp"
 
-#include <chrono>
+#include "Logger.hpp"
 
-IcmpFloodDetector::IcmpFloodDetector(PacketCounter& counter, uint32_t threshold)
-    : _counter(counter), _threshold(threshold)
+#include <arpa/inet.h>
+#include <chrono>
+#include <string>
+
+IcmpFloodDetector::IcmpFloodDetector(PacketCounter& counter, uint32_t threshold, Logger& logger)
+    : _counter(counter), _threshold(threshold), _logger(logger)
 {
 }
 
@@ -20,8 +24,19 @@ Verdict IcmpFloodDetector::inspect(const Packet& packet)
 
     _counter.record(src, now);
 
-    if (_counter.rate(src, now) > _threshold)
+    uint32_t rate = _counter.rate(src, now);
+    if (rate > _threshold)
     {
+        // rate grows by one per packet, so it equals threshold + 1 once per flood: log only then
+        if (rate == _threshold + 1)
+        {
+            char ip[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &packet.ip4->ip_src, ip, sizeof(ip));
+            _logger.log(std::string("ALERT icmp flood src=") + ip +
+                        " rate=" + std::to_string(rate) +
+                        " threshold=" + std::to_string(_threshold) +
+                        " path=" + (packet.source == Source::Inline ? "inline" : "mirror"));
+        }
         return Verdict::DROP;
     }
     return Verdict::ALLOW;

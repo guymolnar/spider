@@ -1,7 +1,7 @@
 #include "PcapCapture.hpp"
 #include "Engine.hpp"
+#include "Logger.hpp"
 
-#include <iostream>
 #include <stdexcept>
 #include <fstream>
 
@@ -10,14 +10,12 @@ static void onPacket(u_char* user, const pcap_pkthdr* header, const u_char* byte
 {
     auto* engine = reinterpret_cast<Engine*>(user);
 
-    if (engine->process(bytes, header->caplen, Source::Mirror) == Verdict::DROP)
-    {
-        std::cout << "[pcap] ALERT attack detected\n";
-    }
+    // mirrored traffic can't be dropped, the detectors log their own alerts
+    engine->process(bytes, header->caplen, Source::Mirror);
 }
 
-PcapCapture::PcapCapture(const std::string& iface, Engine& engine)
-    : _engine(engine)
+PcapCapture::PcapCapture(const std::string& iface, Engine& engine, Logger& logger)
+    : _engine(engine), _logger(logger)
 {
     char errbuf[PCAP_ERRBUF_SIZE];
     std::string expr = "not (ip and ether host " + readMac(iface) + ")";
@@ -53,6 +51,7 @@ PcapCapture::PcapCapture(const std::string& iface, Engine& engine)
         throw std::runtime_error("error setting pcap filter: " + why);
     }
     pcap_freecode(&bpf);
+    _logger.log("pcap: capturing on " + iface + ", filter: " + expr);
 }
 
 PcapCapture::~PcapCapture()
@@ -67,7 +66,7 @@ void PcapCapture::run()
 {
     if (pcap_loop(_handle, -1, onPacket, reinterpret_cast<u_char*>(&_engine)) == -1)
     {
-        std::cerr << "pcap_loop: " << pcap_geterr(_handle) << '\n';
+        _logger.log(std::string("pcap: pcap_loop failed: ") + pcap_geterr(_handle));
     }
 }
 

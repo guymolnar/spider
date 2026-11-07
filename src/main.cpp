@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <thread>
+#include "Logger.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -14,16 +15,21 @@ int main(int argc, char* argv[])
     }
     try
     {
-        Engine engine;
+        Logger logger("/var/log/spider.log");
+        Engine engine(logger);
 
-        NfqCapture nfq(0, engine);
-        PcapCapture pcap(std::string(argv[1]), engine);
+        NfqCapture nfq(0, engine, logger);
+        PcapCapture pcap(std::string(argv[1]), engine, logger);
+
+        logger.log(std::string("spider started on ") + argv[1]);
 
         std::thread nfqThread(&NfqCapture::run, &nfq);
         std::thread pcapThread(&PcapCapture::run, &pcap);
 
         nfqThread.join();
         pcapThread.join();
+
+        logger.log("spider stopped");
     }
     catch (const std::exception& e)
     {

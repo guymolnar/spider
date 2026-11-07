@@ -23,7 +23,7 @@ private:
     std::deque<std::string> _queue;
     std::mutex _mutex;
     std::condition_variable _cv;
-    bool _running = true;       // guarded by mutex_
-    std::size_t _dropped = 0;   // guarded by mutex_
+    bool _running = true;       // guarded by _mutex
+    std::size_t _dropped = 0;   // guarded by _mutex, reported and reset by the writer
     std::thread _writer;        // started last, after everything it uses
 };
