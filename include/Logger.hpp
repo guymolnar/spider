@@ -19,7 +19,7 @@ private:
 
     static constexpr std::size_t MAX_QUEUE_SIZE = 10000;
 
-    std::ofstream _file_;
+    std::ofstream _file;
     std::deque<std::string> _queue;
     std::mutex _mutex;
     std::condition_variable _cv;
