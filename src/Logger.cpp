@@ -17,3 +17,26 @@ Logger::~Logger() {
     _cv.notify_one();
     _writer.join();
 }
+
+std::string timestamp() {
+    std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::tm tm{};
+    localtime_r(&now, &tm);
+    char buf[32];
+    std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);
+    return buf;
+}
+
+void Logger::log(const std::string& message) {
+    std::string line = "[" + timestamp() + "] " + message;
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (_queue.size() >= MAX_QUEUE_SIZE) 
+        {
+            _dropped++;
+            return;
+        }
+        _queue.push_back(line);
+    }
+    _cv.notify_one();
+}
