@@ -19,6 +19,7 @@ add_executable(spider
     src/StateManager.cpp
     src/IcmpFloodDetector.cpp
     src/Engine.cpp
+    src/Responder.cpp
     src/Logger.cpp
 )
 
