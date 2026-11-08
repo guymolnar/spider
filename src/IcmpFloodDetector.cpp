@@ -37,7 +37,7 @@ bool IcmpFloodDetector::inspect(const Packet& packet)
                         " threshold=" + std::to_string(_threshold) +
                         " path=" + (packet.source == Source::Inline ? "inline" : "mirror"));
         }
-        return Verdict::DROP;
+        return false;
     }
-    return Verdict::ALLOW;
+    return true;
 }
