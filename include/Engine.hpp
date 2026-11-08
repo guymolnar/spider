@@ -14,7 +14,7 @@ class Logger;
 class Engine
 {
 public:
-    explicit Engine(Logger& logger);
+    Engine(Logger& logger);
     ~Engine();
 
     Engine(const Engine&) = delete;
