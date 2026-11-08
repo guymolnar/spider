@@ -12,7 +12,7 @@ class IcmpFloodDetector : public Detector
 public:
     IcmpFloodDetector(PacketCounter& counter, uint32_t threshold, Logger& logger);
 
-    Verdict inspect(const Packet& packet) override;
+    bool inspect(const Packet& packet) override;
     bool wants(const Packet& packet) const override;
 
 private:
