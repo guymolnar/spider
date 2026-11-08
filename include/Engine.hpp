@@ -26,5 +26,5 @@ public:
 private:
     StateManager _state;                    // declared first, so it is destroyed last
     std::vector<std::unique_ptr<Detector>> _detectors;
-    Responder _respoder;
+    Responder _responder;
 };
