@@ -27,13 +27,14 @@ Verdict Engine::process(const uint8_t* data, size_t len, Source source) const
         return Verdict::ALLOW;
     }
 
-    Verdict result = Verdict::ALLOW;
+    bool attackDetected = false;
     for (const auto& detector : _detectors)
     {
-        if (detector->wants(pkt) && detector->inspect(pkt) == Verdict::DROP)
+        if (detector->wants(pkt) && detector->inspect(pkt))
         {
-            result = Verdict::DROP;
+            attackDetected = true;
         }
     }
-    return result;
+
+    return _responder.respond(attackDetected, pkt.source);
 }
