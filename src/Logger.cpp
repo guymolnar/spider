@@ -37,7 +37,6 @@ void Logger::log(const std::string& message) {
         std::lock_guard<std::mutex> lock(_mutex);
         if (_queue.size() >= MAX_QUEUE_SIZE)
         {
-            _dropped++;
             return;
         }
         _queue.push_back(line);
@@ -48,7 +47,6 @@ void Logger::log(const std::string& message) {
 void Logger::writerLoop() {
     while (true) {
         std::deque<std::string> batch;
-        std::size_t dropped = 0;
         {
             std::unique_lock<std::mutex> lock(_mutex);
             _cv.wait(lock, [this] { return !_queue.empty() || !_running; });
@@ -57,16 +55,10 @@ void Logger::writerLoop() {
                 return;
             }
             batch.swap(_queue);
-            dropped = _dropped;
-            _dropped = 0;
         }
 
         for (const std::string& line : batch) {
             _file << line << '\n';
-        }
-        if (dropped > 0)
-        {
-            _file << "[" << timestamp() << "] logger: " << dropped << " log lines dropped (queue full)\n";
         }
         _file.flush();
     }
