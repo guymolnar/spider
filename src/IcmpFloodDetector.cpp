@@ -17,7 +17,7 @@ bool IcmpFloodDetector::wants(const Packet& packet) const
     return packet.ip4 && packet.icmp && packet.icmp->type == ICMP_ECHO;
 }
 
-Verdict IcmpFloodDetector::inspect(const Packet& packet)
+bool IcmpFloodDetector::inspect(const Packet& packet)
 {
     auto now = std::chrono::steady_clock::now();
     uint32_t src = packet.ip4->ip_src.s_addr;    
