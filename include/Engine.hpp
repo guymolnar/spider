@@ -8,6 +8,7 @@
 #include "Detector.hpp"
 #include "Packet.hpp"
 #include "StateManager.hpp"
+#include "Responder.hpp"
 
 class Logger;
 
@@ -25,4 +26,5 @@ public:
 private:
     StateManager _state;                    // declared first, so it is destroyed last
     std::vector<std::unique_ptr<Detector>> _detectors;
+    Responder _respoder;
 };
