@@ -16,36 +16,39 @@ int64_t PacketCounter::sliceOf(std::chrono::steady_clock::time_point t) const
 
 void PacketCounter::record(uint32_t srcIp, std::chrono::steady_clock::time_point now)
 {
-    const int64_t buckets = kBuckets;
-    int64_t slice = sliceOf(now);
+    const int64_t buckets = kBuckets; //amount of buckets (cells in the array)
+    int64_t slice = sliceOf(now); //getting current slice (whole slices since the clock started)
 
     std::lock_guard<std::mutex> lock(_mutex);
-    auto [it, inserted] = _entries.try_emplace(srcIp);
+    auto [it, inserted] = _entries.try_emplace(srcIp); //checking if src ip exists in the map, if not create new entry
     Entry& e = it->second;
 
     if (inserted)
     {
-        e.lastSlice = slice;
+        e.lastSlice = slice; //if we just created the entry, set the last slice to the current slice
     }
     else
     {
-        if (slice < e.lastSlice)            // a packet stamped earlier arrived late; never go backwards
+        if (slice < e.lastSlice)
         {
+            /*current slice can never be smaller than the last slice (chronologicaly doesnt make sense), 
+        but because of threads it may happen, so we just ignore it and use the last slice*/
             slice = e.lastSlice;
         }
-        int64_t gap = slice - e.lastSlice;
-        if (gap >= buckets)                 // silent for a whole window
+        int64_t gap = slice - e.lastSlice; //checking the gap (amount of slices) that passed since the last slice
+        if (gap >= buckets)
         {
+        //if gap is bigger than the amount of buckets, it was silent for a whole window so the entire array is outdated, so we zero it
             for (int i = 0; i < kBuckets; ++i)
             {
                 e.buckets[i] = 0;
             }
         }
-        else
+        else //if gap is smaller than the amount of buckets, we just zero the buckets that are outdated (even though there may be none)
         {
-            for (int64_t s = e.lastSlice + 1; s <= slice; ++s)
+            for (int64_t s = e.lastSlice + 1; s <= slice; s++)
             {
-                e.buckets[s % buckets] = 0; // buckets we are entering get wiped
+                e.buckets[s % buckets] = 0; //any slice between the last slice and the current slice got no packets, so we zero it
             }
         }
         e.lastSlice = slice;
