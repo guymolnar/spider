@@ -11,7 +11,7 @@ PacketCounter::PacketCounter(std::chrono::steady_clock::duration window) : _buck
 
 int64_t PacketCounter::sliceOf(std::chrono::steady_clock::time_point t) const
 {
-    return t.time_since_epoch() / _bucketWidth;   // whole slices since the clock started
+    return t.time_since_epoch() / _bucketWidth;   // whole slices since the clock started (Doesnt matter whats the start point because later we check for differences)
 }
 
 void PacketCounter::record(uint32_t srcIp, std::chrono::steady_clock::time_point now)
