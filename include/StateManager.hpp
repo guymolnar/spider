@@ -28,6 +28,7 @@ private:
 
     std::chrono::steady_clock::duration _interval;
     std::vector<std::unique_ptr<PacketCounter>> _counters;   // unique_ptr: counters can't be moved
+    std::unordered_map<uint32_t, uint32_t> _ipToMac; // mapping of IP addresses to MAC addresses
     std::thread _cleanupThread;                                 // runs cleanupLoop()
 
     std::mutex _mutex;                                // guards _counters and _stopping
