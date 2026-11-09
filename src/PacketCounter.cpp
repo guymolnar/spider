@@ -64,14 +64,14 @@ uint32_t PacketCounter::rate(uint32_t srcIp, std::chrono::steady_clock::time_poi
 
     std::lock_guard<std::mutex> lock(_mutex);
     auto it = _entries.find(srcIp);
-    if (it == _entries.end())
+    if (it == _entries.end()) // if ip has no entry, his rate is 0;
     {
         return 0;
     }
 
     const Entry& e = it->second;
     uint32_t total = 0;
-    for (int64_t age = 0; age < buckets; age++)
+    for (int64_t age = 0; age < buckets; age++) //age is used as a counter to count age slices before last slice
     {
         int64_t s = e.lastSlice - age;      // the slice this bucket holds
         if (s > nowSlice - buckets && s >= 0)   // still inside the window ending now
