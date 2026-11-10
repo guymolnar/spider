@@ -1,4 +1,5 @@
 #include "Engine.hpp"
+#include "ArpSpoofingDetector.hpp"
 #include "IcmpFloodDetector.hpp"
 #include "Logger.hpp"
 #include "Parser.hpp"
@@ -6,10 +7,11 @@
 #include <chrono>
 
 
-Engine::Engine(Logger& logger)
+Engine::Engine(Logger& logger, const std::string& lanIface, uint32_t routerIp) : _sender(lanIface, routerIp)
 {
     const uint32_t icmpThreshold = 100;
     _detectors.push_back(std::make_unique<IcmpFloodDetector>(_state.makeCounter(std::chrono::seconds(1)), icmpThreshold, logger));
+    _detectors.push_back(std::make_unique<ArpSpoofingDetector>(_state.arpTable(), _sender, logger));
     _state.startCleanup();
     logger.log("engine: started, icmp flood threshold=" + std::to_string(icmpThreshold) + " per second");
 }

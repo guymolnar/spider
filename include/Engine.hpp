@@ -3,10 +3,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "Detector.hpp"
 #include "Packet.hpp"
+#include "PacketSender.hpp"
 #include "StateManager.hpp"
 #include "Responder.hpp"
 
@@ -15,7 +17,7 @@ class Logger;
 class Engine
 {
 public:
-    Engine(Logger& logger);
+    Engine(Logger& logger, const std::string& lanIface, uint32_t routerIp);   // routerIp in network order
     ~Engine();
 
     Engine(const Engine&) = delete;
@@ -25,6 +27,7 @@ public:
 
 private:
     StateManager _state;                    // declared first, so it is destroyed last
+    PacketSender _sender;                   // detectors hold a reference, so it must outlive them
     std::vector<std::unique_ptr<Detector>> _detectors;
     Responder _responder;
 };
