@@ -56,3 +56,29 @@ void PacketSender::readRouterMac(const std::string& iface)
     }
     std::memcpy(_routerMac, mac.ether_addr_octet, ETH_ALEN);
 }
+
+bool PacketSender::sendArp(uint16_t op, const uint8_t dstMac[ETH_ALEN], const uint8_t senderMac[ETH_ALEN], uint32_t senderIp,
+                           const uint8_t targetMac[ETH_ALEN], uint32_t targetIp)
+{
+    uint8_t frame[sizeof(ether_header) + sizeof(ether_arp)] = {0};
+    ether_header* eth = reinterpret_cast<ether_header*>(frame);
+    ether_arp* arp = reinterpret_cast<ether_arp*>(frame + sizeof(ether_header));
+
+    std::memcpy(eth->ether_dhost, dstMac, ETH_ALEN);
+    // the frame always leaves from the router, even when the arp body speaks for another host
+    // using the other host's mac here would make the switch send that host's traffic to us
+    std::memcpy(eth->ether_shost, _routerMac, ETH_ALEN);
+    eth->ether_type = htons(ETHERTYPE_ARP);
+
+    arp->ea_hdr.ar_hrd = htons(ARPHRD_ETHER);
+    arp->ea_hdr.ar_pro = htons(ETHERTYPE_IP);
+    arp->ea_hdr.ar_hln = ETH_ALEN;
+    arp->ea_hdr.ar_pln = sizeof(senderIp);
+    arp->ea_hdr.ar_op = htons(op);
+    std::memcpy(arp->arp_sha, senderMac, ETH_ALEN);
+    std::memcpy(arp->arp_spa, &senderIp, sizeof(senderIp));
+    std::memcpy(arp->arp_tha, targetMac, ETH_ALEN);
+    std::memcpy(arp->arp_tpa, &targetIp, sizeof(targetIp));
+
+    return pcap_inject(_pcapHandle, frame, sizeof(frame)) != -1;
+}
