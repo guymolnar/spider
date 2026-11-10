@@ -16,7 +16,7 @@ public:
     const uint8_t* routerMac() const { return _routerMac; }
 
 private:
-    void readRouterAddresses(const std::string& iface);
+    void readRouterMac(const std::string& iface);
     bool sendArp(uint16_t op, const uint8_t dstMac[ETH_ALEN], const uint8_t senderMac[ETH_ALEN], uint32_t senderIp,
                  const uint8_t targetMac[ETH_ALEN], uint32_t targetIp);
 
