@@ -57,6 +57,15 @@ void PacketSender::readRouterMac(const std::string& iface)
     std::memcpy(_routerMac, mac.ether_addr_octet, ETH_ALEN);
 }
 
+bool PacketSender::sendArpRequest(uint32_t targetIp)
+{
+    uint8_t broadcast[ETH_ALEN];
+    uint8_t unknown[ETH_ALEN] = {0}; // the mac we are asking for
+    std::memset(broadcast, 0xFF, ETH_ALEN);
+
+    return sendArp(ARPOP_REQUEST, broadcast, _routerMac, _routerIp, unknown, targetIp);
+}
+
 bool PacketSender::sendArp(uint16_t op, const uint8_t dstMac[ETH_ALEN], const uint8_t senderMac[ETH_ALEN], uint32_t senderIp,
                            const uint8_t targetMac[ETH_ALEN], uint32_t targetIp)
 {
