@@ -12,8 +12,7 @@
 #include <fstream>
 #include <netinet/ether.h>
 
-PacketSender::PacketSender(const std::string& iface)
-{
+PacketSender::PacketSender(const std::string& iface, uint32_t routerIp) : _routerIp(routerIp){
     readRouterMac(iface);
 
     char errbuf[PCAP_ERRBUF_SIZE];

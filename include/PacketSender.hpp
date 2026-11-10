@@ -7,7 +7,7 @@
 class PacketSender
 {
 public:
-    PacketSender(const std::string& iface);
+    PacketSender(const std::string& iface, uint32_t routerIp);
     ~PacketSender();
    // broadcasts "who has targetIp?", the answers come back through the main capture
     bool sendArpRequest(uint32_t targetIp);
