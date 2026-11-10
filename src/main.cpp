@@ -1,6 +1,7 @@
 #include "PcapCapture.hpp"
 #include "NfqCapture.hpp"
 #include "Engine.hpp"
+#include <arpa/inet.h>
 #include <iostream>
 #include <stdexcept>
 #include <thread>
@@ -16,7 +17,8 @@ int main(int argc, char* argv[])
     try
     {
         Logger logger("/var/log/spider.log");
-        Engine engine(logger);
+        // router ip is fixed until the config file exists
+        Engine engine(logger, argv[1], inet_addr("10.0.1.254"));
 
         NfqCapture nfq(0, engine, logger);
         PcapCapture pcap(std::string(argv[1]), engine, logger);

@@ -21,6 +21,8 @@ add_executable(spider
     src/Engine.cpp
     src/Responder.cpp
     src/Logger.cpp
+    src/PacketSender.cpp
+    src/ArpSpoofingDetector.cpp
 )
 
 target_include_directories(spider PRIVATE include)

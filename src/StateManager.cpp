@@ -14,7 +14,12 @@ PacketCounter& StateManager::makeCounter(std::chrono::steady_clock::duration win
 {
     std::lock_guard<std::mutex> lock(_mutex);
     _counters.push_back(std::make_unique<PacketCounter>(window));
-    return *_counters.back();             
+    return *_counters.back();
+}
+
+std::unordered_map<uint32_t, ArpEntry>& StateManager::arpTable()
+{
+    return _arpTable;
 }
 
 void StateManager::startCleanup()
