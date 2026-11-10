@@ -13,6 +13,7 @@ public:
     static constexpr int kBuckets = 5;
 /*
     Q: Why do we need "buckets" and not just use a single counter that we reset every second?
+
     A: The problem: Imagine we use a single variable that just resets at every second, 
     with a threshold of 100 packet per second.
     if a source sends 90 packets in the second half of some second, 
@@ -32,10 +33,7 @@ public:
     We have to either count the whole bucket or drop it, and we drop it. This gives us a margin of error
     of about 1 bucket width (for example if the window is 1 second and we have 5 buckets, the margin of error is 20%), which is acceptable to us.
 */
-    explicit PacketCounter(std::chrono::steady_clock::duration window);
-
-    PacketCounter(const PacketCounter&) = delete;
-    PacketCounter& operator=(const PacketCounter&) = delete;
+    PacketCounter(std::chrono::steady_clock::duration window);
 
     void record(uint32_t srcIp, std::chrono::steady_clock::time_point now);
 
