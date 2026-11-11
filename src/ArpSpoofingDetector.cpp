@@ -21,8 +21,7 @@ static std::string ipToString(uint32_t ip)
     return buf;
 }
 
-ArpSpoofingDetector::ArpSpoofingDetector(std::unordered_map<uint32_t, ArpEntry>& table, PacketSender& sender, Logger& logger) : _table(table), _sender(sender), _logger(logger)
-{
+ArpSpoofingDetector::ArpSpoofingDetector(std::unordered_map<uint32_t, ArpEntry>& table, PacketSender& sender, const Responder& responder, Logger& logger) : _table(table), _sender(sender), _responder(responder), _logger(logger){
     // the router's pair comes from its own interface, so it is trusted without a probe
     ArpEntry& router = _table[_sender.routerIp()];
     router.status = ArpStatus::Trusted;
@@ -48,6 +47,12 @@ bool ArpSpoofingDetector::inspect(const Packet& packet)
     }
     const uint8_t* senderMac = packet.arp->arp_sha;
 
+    const uint8_t* targetMac = packet.arp->arp_tha;
+    uint32_t targetIp;
+    std::memcpy(&targetIp, packet.arp->arp_tpa, sizeof(targetIp));
+
+    const bool directedReply = ntohs(packet.arp->arp_op) == ARPOP_REPLY && std::memcmp(targetMac, packet.eth->ether_dhost, ETH_ALEN) == 0;
+
     auto it = _table.find(senderIp);
     if (it == _table.end())
     {
@@ -64,7 +69,11 @@ bool ArpSpoofingDetector::inspect(const Packet& packet)
 
     if (entry.status == ArpStatus::Pending)
     {
-
+        if (!directedReply || targetIp != _sender.routerIp() || std::memcmp(targetMac, _sender.routerMac(), ETH_ALEN) != 0 || std::memcmp(senderMac, packet.eth->ether_shost, ETH_ALEN) != 0)
+        {
+            return false;
+        }
+        
         std::array<uint8_t, ETH_ALEN> mac;
         std::copy(senderMac, senderMac + ETH_ALEN, mac.begin());
         // count macs not packets, the same host may answer twice
@@ -101,6 +110,20 @@ bool ArpSpoofingDetector::inspect(const Packet& packet)
                     " claimed=" + macToString(senderMac) +
                     " path=" + (packet.source == Source::Inline ? "inline" : "mirror"));
     }
+
+    const uint8_t zeroMac[ETH_ALEN]{};
+    const bool hasVictim =
+        directedReply && targetIp != 0 && targetIp != senderIp &&
+        targetIp != _sender.routerIp() && (targetMac[0] & 1) == 0 &&
+        std::memcmp(targetMac, zeroMac, ETH_ALEN) != 0 &&
+        std::memcmp(targetMac, _sender.routerMac(), ETH_ALEN) != 0;
+
+    if (hasVictim && now >= entry.nextCorrection)
+    {
+        entry.nextCorrection = now + std::chrono::seconds(1);
+        _responder.correctArp(senderIp, entry.mac.data(), targetMac);
+    }
+
     return true;
 }
 
