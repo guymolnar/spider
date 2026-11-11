@@ -11,6 +11,8 @@
 #include <unistd.h> 
 #include <fstream>
 #include <netinet/ether.h>
+#include <cerrno>
+#include <netpacket/packet.h>
 
 PacketSender::PacketSender(const std::string& iface, uint32_t routerIp) : _routerIp(routerIp){
     readRouterMac(iface);
@@ -29,6 +31,8 @@ PacketSender::PacketSender(const std::string& iface, uint32_t routerIp) : _route
         pcap_close(_pcapHandle);
         throw std::runtime_error("error activating sender pcap handle: " + why);
     }
+    
+    _interfaceIndex = if_nametoindex(iface.c_str());
 }
 
 PacketSender::~PacketSender()
@@ -62,11 +66,12 @@ bool PacketSender::sendArpRequest(uint32_t targetIp)
     uint8_t unknown[ETH_ALEN] = {0}; // the mac we are asking for
     std::memset(broadcast, 0xFF, ETH_ALEN);
 
-    return sendArp(ARPOP_REQUEST, broadcast, _routerMac, _routerIp, unknown, targetIp);
+    return sendArp(ARPOP_REQUEST, broadcast, _routerMac, _routerIp,
+               unknown, targetIp, false);
 }
 
 bool PacketSender::sendArp(uint16_t op, const uint8_t dstMac[ETH_ALEN], const uint8_t senderMac[ETH_ALEN], uint32_t senderIp,
-                           const uint8_t targetMac[ETH_ALEN], uint32_t targetIp)
+                           const uint8_t targetMac[ETH_ALEN], uint32_t targetIp, bool useRawSocket)
 {
     uint8_t frame[sizeof(ether_header) + sizeof(ether_arp)] = {0};
     ether_header* eth = reinterpret_cast<ether_header*>(frame);
@@ -88,5 +93,43 @@ bool PacketSender::sendArp(uint16_t op, const uint8_t dstMac[ETH_ALEN], const ui
     std::memcpy(arp->arp_tha, targetMac, ETH_ALEN);
     std::memcpy(arp->arp_tpa, &targetIp, sizeof(targetIp));
 
-    return pcap_inject(_pcapHandle, frame, sizeof(frame)) != -1;
+    if (!useRawSocket)
+    {
+        return pcap_inject(_pcapHandle, frame, sizeof(frame)) ==
+            static_cast<int>(sizeof(frame));
+    }
+
+    if (_interfaceIndex == 0)
+    {
+        return false;
+    }
+
+    const int fd = socket(AF_PACKET, SOCK_RAW | SOCK_CLOEXEC, 0);
+    if (fd < 0)
+    {
+        return false;
+    }
+
+    sockaddr_ll destination{};
+    destination.sll_family = AF_PACKET;
+    destination.sll_protocol = htons(ETH_P_ARP);
+    destination.sll_ifindex = static_cast<int>(_interfaceIndex);
+    destination.sll_halen = ETH_ALEN;
+    std::memcpy(destination.sll_addr, dstMac, ETH_ALEN);
+
+    ssize_t sent;
+    do
+    {
+        sent = sendto(fd, frame, sizeof(frame), MSG_DONTWAIT,
+                    reinterpret_cast<const sockaddr*>(&destination),
+                    sizeof(destination));
+    } while (sent < 0 && errno == EINTR);
+
+    close(fd);
+    return sent == static_cast<ssize_t>(sizeof(frame));
+}
+
+bool PacketSender::sendArpCorrection(uint32_t claimedIp, const uint8_t* trustedMac, const uint8_t* recipientMac)
+{
+    return sendArp(ARPOP_REPLY, recipientMac, trustedMac, claimedIp, trustedMac, claimedIp, true);
 }
