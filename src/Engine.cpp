@@ -7,7 +7,7 @@
 #include <chrono>
 
 
-Engine::Engine(Logger& logger, const std::string& lanIface, uint32_t routerIp) : _sender(lanIface, routerIp)
+Engine::Engine(Logger& logger, const std::string& lanIface, uint32_t routerIp) : _sender(lanIface, routerIp), _responder(_sender, logger)
 {
     const uint32_t icmpThreshold = 100;
     _detectors.push_back(std::make_unique<IcmpFloodDetector>(_state.makeCounter(std::chrono::seconds(1)), icmpThreshold, logger));

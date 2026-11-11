@@ -1,4 +1,8 @@
 #include "Responder.hpp"
+#include "Logger.hpp"
+#include "PacketSender.hpp"
+
+#include <arpa/inet.h>
 
 Verdict Responder::respond(bool attackDetected, Source source) const
 {
@@ -8,4 +12,18 @@ Verdict Responder::respond(bool attackDetected, Source source) const
     }
 
     return Verdict::ALLOW;
+}
+
+Responder::Responder(PacketSender& sender, Logger& logger) : _sender(sender), _logger(logger)
+{
+}
+
+void Responder::correctArp(uint32_t claimedIp, const uint8_t* trustedMac, const uint8_t* recipientMac) const
+{
+    const bool sent = _sender.sendArpCorrection(claimedIp, trustedMac, recipientMac);
+
+    char ip[INET_ADDRSTRLEN]{};
+    inet_ntop(AF_INET, &claimedIp, ip, sizeof(ip));
+
+    _logger.log(std::string("response: corrective ARP for ") + ip + (sent ? " sent" : " failed"));
 }
