@@ -26,6 +26,7 @@ struct ArpEntry
     std::chrono::steady_clock::time_point deadline;       // when to decide, used while pending
     std::vector<std::array<uint8_t, ETH_ALEN>> answers;   // every mac that answered the probe
     std::chrono::steady_clock::time_point lastAlert; 
+    std::chrono::steady_clock::time_point nextCorrection{};
 };
 
 class StateManager

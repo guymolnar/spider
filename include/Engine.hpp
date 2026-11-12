@@ -28,6 +28,7 @@ public:
 private:
     StateManager _state;                    // declared first, so it is destroyed last
     PacketSender _sender;                   // detectors hold a reference, so it must outlive them
-    std::vector<std::unique_ptr<Detector>> _detectors;
     Responder _responder;
+    std::vector<std::unique_ptr<Detector>> _detectors;
+    
 };
