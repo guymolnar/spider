@@ -21,7 +21,7 @@ static std::string ipToString(uint32_t ip)
     return buf;
 }
 
-ArpSpoofingDetector::ArpSpoofingDetector(std::unordered_map<uint32_t, ArpEntry>& table, PacketSender& sender, const Responder& responder, Logger& logger) : _table(table), _sender(sender), _responder(responder), _logger(logger){
+ArpSpoofingDetector::ArpSpoofingDetector(std::unordered_map<uint32_t, ArpEntry>& table, PacketSender& sender, Responder& responder, Logger& logger) : _table(table), _sender(sender), _responder(responder), _logger(logger){
     // the router's pair comes from its own interface, so it is trusted without a probe
     ArpEntry& router = _table[_sender.routerIp()];
     router.status = ArpStatus::Trusted;
