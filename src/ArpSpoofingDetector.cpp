@@ -111,17 +111,11 @@ bool ArpSpoofingDetector::inspect(const Packet& packet)
                     " path=" + (packet.source == Source::Inline ? "inline" : "mirror"));
     }
 
-    const uint8_t zeroMac[ETH_ALEN]{};
-    const bool hasVictim =
-        directedReply && targetIp != 0 && targetIp != senderIp &&
-        targetIp != _sender.routerIp() && (targetMac[0] & 1) == 0 &&
-        std::memcmp(targetMac, zeroMac, ETH_ALEN) != 0 &&
-        std::memcmp(targetMac, _sender.routerMac(), ETH_ALEN) != 0;
-
-    if (hasVictim && now >= entry.nextCorrection)
+    // limit corrections to one per second per ip, so a flood of lies doesnt become a flood of corrections
+    if (now >= entry.nextCorrection)
     {
         entry.nextCorrection = now + std::chrono::seconds(1);
-        _responder.correctArp(senderIp, entry.mac.data(), targetMac);
+        _responder.correctArp(senderIp, entry.mac.data());
     }
 
     return true;

@@ -18,9 +18,9 @@ Responder::Responder(PacketSender& sender, Logger& logger) : _sender(sender), _l
 {
 }
 
-void Responder::correctArp(uint32_t claimedIp, const uint8_t* trustedMac, const uint8_t* recipientMac) const
+void Responder::correctArp(uint32_t claimedIp, const uint8_t* trustedMac) const
 {
-    const bool sent = _sender.sendArpCorrection(claimedIp, trustedMac, recipientMac);
+    const bool sent = _sender.sendArpCorrection(claimedIp, trustedMac);
 
     char ip[INET_ADDRSTRLEN]{};
     inet_ntop(AF_INET, &claimedIp, ip, sizeof(ip));

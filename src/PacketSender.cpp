@@ -91,7 +91,12 @@ bool PacketSender::sendArp(uint16_t op, const uint8_t dstMac[ETH_ALEN], const ui
     return pcap_inject(_pcapHandle, frame, sizeof(frame)) == static_cast<int>(sizeof(frame));
 }
 
-bool PacketSender::sendArpCorrection(uint32_t claimedIp, const uint8_t* trustedMac, const uint8_t* recipientMac)
+bool PacketSender::sendArpCorrection(uint32_t claimedIp, const uint8_t* trustedMac)
 {
-    return sendArp(ARPOP_REPLY, recipientMac, trustedMac, claimedIp, trustedMac, claimedIp);
+    // broadcast, a spoofed reply may have reached more hosts than the one it was sent to
+    // hosts only update an entry they already have, so clean hosts are not affected
+    uint8_t broadcast[ETH_ALEN];
+    std::memset(broadcast, 0xFF, ETH_ALEN);
+
+    return sendArp(ARPOP_REPLY, broadcast, trustedMac, claimedIp, trustedMac, claimedIp);
 }
