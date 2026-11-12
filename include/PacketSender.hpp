@@ -11,6 +11,8 @@ public:
     ~PacketSender();
    // broadcasts "who has targetIp?", the answers come back through the main capture
     bool sendArpRequest(uint32_t targetIp);
+    // tells recipientMac that claimedIp is really at trustedMac, undoing a spoofed reply
+    bool sendArpCorrection(uint32_t claimedIp, const uint8_t* trustedMac, const uint8_t* recipientMac);
 
     uint32_t routerIp() const { return _routerIp; }
     const uint8_t* routerMac() const { return _routerMac; }
